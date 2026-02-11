@@ -1,178 +1,85 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/lib/auth';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
+import type { Profile } from '@/types';
 
-type AuthMode = 'login' | 'signup' | 'reset';
+interface AuthState {
+  user: User | null;
+  profile: Profile | null;
+  session: Session | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
+}
 
-export function AuthPage() {
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
-  const navigate = useNavigate();
+const AuthContext = createContext<AuthState | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setMessage(null);
-    setLoading(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    if (mode === 'login') {
-      const { error: err } = await signIn(email, password);
-      if (err) setError(err);
-      else navigate('/');
-    } else if (mode === 'signup') {
-      if (!username.trim()) { setError('Username is required'); setLoading(false); return; }
-      if (password.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return; }
-      if (password !== confirmPassword) { setError('Passwords do not match'); setLoading(false); return; }
-      const { error: err } = await signUp(email, password, username.trim());
-      if (err) setError(err);
-      else setMessage('Check your email to confirm your account.');
-    } else if (mode === 'reset') {
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?mode=update-password`,
-      });
-      if (err) setError(err.message);
-      else setMessage('Password reset link sent to your email.');
-    }
+  async function fetchProfile(userId: string) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    setProfile(data);
+  }
 
-    setLoading(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) fetchProfile(s.user.id);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) fetchProfile(s.user.id);
+      else setProfile(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
   };
 
-  const switchMode = (newMode: AuthMode) => {
-    setMode(newMode);
-    setError(null);
-    setMessage(null);
-    setConfirmPassword('');
+  const signUp = async (email: string, password: string, username: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } },
+    });
+    if (error) return { error: error.message };
+    if (data.user) {
+      await fetchProfile(data.user.id);
+    }
+    return { error: null };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setProfile(null);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="font-display text-3xl text-parchment-100 font-bold tracking-wider">
-            AETHERMOOR
-          </h1>
-          <p className="text-parchment-500 text-sm mt-1">
-            {mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="card space-y-4">
-          {mode === 'signup' && (
-            <div>
-              <label className="block text-xs text-parchment-400 uppercase tracking-wider mb-1">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="input-field"
-                placeholder="Your display name"
-                required
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs text-parchment-400 uppercase tracking-wider mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          {mode !== 'reset' && (
-            <div>
-              <label className="block text-xs text-parchment-400 uppercase tracking-wider mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
-            </div>
-          )}
-
-          {mode === 'signup' && (
-            <div>
-              <label className="block text-xs text-parchment-400 uppercase tracking-wider mb-1">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="input-field"
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
-            </div>
-          )}
-
-          {error && (
-            <div className="text-blood-400 text-sm bg-blood-900/20 border border-blood-800/30 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
-
-          {message && (
-            <div className="text-nature-400 text-sm bg-nature-900/20 border border-nature-800/30 rounded-lg px-3 py-2">
-              {message}
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
-          </button>
-        </form>
-
-        <div className="text-center space-y-2">
-          {mode === 'login' && (
-            <>
-              <button
-                onClick={() => switchMode('reset')}
-                className="text-sm text-parchment-500 hover:text-arcane-400 transition-colors block w-full"
-              >
-                Forgot your password?
-              </button>
-              <button
-                onClick={() => switchMode('signup')}
-                className="text-sm text-parchment-400 hover:text-arcane-400 transition-colors block w-full"
-              >
-                Don't have an account? Sign up
-              </button>
-            </>
-          )}
-          {mode === 'signup' && (
-            <button
-              onClick={() => switchMode('login')}
-              className="text-sm text-parchment-400 hover:text-arcane-400 transition-colors"
-            >
-              Already have an account? Sign in
-            </button>
-          )}
-          {mode === 'reset' && (
-            <button
-              onClick={() => switchMode('login')}
-              className="text-sm text-parchment-400 hover:text-arcane-400 transition-colors"
-            >
-              Back to sign in
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+    <AuthContext.Provider value={{ user, profile, session, loading, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }
