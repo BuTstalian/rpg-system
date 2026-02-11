@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { PathInfo, Background } from '@/types';
-import type { PathName, SkillName, ResourceType } from '@/types/enums';
+import type { PathName } from '@/types/enums';
 import { PATHS_DATA, BACKGROUNDS_DATA, type PathData } from '@/data/referenceData';
 
 /**
