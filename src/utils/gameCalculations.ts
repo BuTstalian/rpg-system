@@ -199,7 +199,7 @@ export function rollExpression(expr: string): DiceResult | null {
 
 export type DegreeOfSuccess = 'critical_failure' | 'failure' | 'partial' | 'full' | 'critical';
 
-export function degreeOfSuccess(roll: number, total: number, tn: number, natural: number): DegreeOfSuccess {
+export function degreeOfSuccess(_roll: number, total: number, tn: number, natural: number): DegreeOfSuccess {
   const margin = total - tn;
 
   let degree: DegreeOfSuccess;

@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import type { Character, CharacterSkill, CharacterEquipmentItem, CharacterCondition } from '@/types';
 import type { AttributeName, PathName } from '@/types/enums';
 import {
-  POINT_BUY_TOTAL, PATH_AUTO_SKILLS, PATH_HP_BASE,
+  POINT_BUY_TOTAL,
   type SkillName,
 } from '@/types/enums';
 import {

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Shield, Heart, Zap, Swords, Eye, Flame, Droplets } from 'lucide-react';
 import type { Character, CharacterSkill, CharacterEquipmentItem, CharacterCondition } from '@/types';
-import type { AttributeName, SkillName, ConditionName } from '@/types/enums';
-import { SKILLS, SKILL_ATTRIBUTES, PATH_RESOURCES, RARITY_COLORS, CONDITION_COLORS } from '@/types/enums';
+import type { SkillName, ConditionName } from '@/types/enums';
+import { SKILLS, PATH_RESOURCES, RARITY_COLORS, CONDITION_COLORS } from '@/types/enums';
 import {
-  attributeModifier, proficiencyBonus, maxAP, initiative, bleedoutTimer,
+  attributeModifier, proficiencyBonus, initiative, bleedoutTimer,
   computeSkill, conditionLabel,
 } from '@/utils/gameCalculations';
 
