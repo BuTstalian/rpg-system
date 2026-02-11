@@ -22,8 +22,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase.rpc('get_profile', { user_id: userId });
-    setProfile(data?.[0] ?? null);
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    setProfile(data);
   }
 
   useEffect(() => {
@@ -50,15 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, username: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } },
+    });
     if (error) return { error: error.message };
     if (data.user) {
-      const { error: profileError } = await supabase.rpc('create_profile', {
-        user_id: data.user.id,
-        user_name: username,
-        user_display_name: username,
-      });
-      if (profileError) return { error: profileError.message };
+      // Profile created automatically by database trigger
       await fetchProfile(data.user.id);
     }
     return { error: null };
