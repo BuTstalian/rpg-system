@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg-primary: #14100d;
+    --color-bg-secondary: #1e1814;
+    --color-bg-surface: #2a2018;
+    --color-border: #46392f;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--color-bg-primary);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #5c5040; }
+}
+
+@layer components {
+  .card {
+    @apply bg-ink-800/80 border border-ink-600/40 rounded-lg p-4 backdrop-blur-sm;
+  }
+
+  .card-header {
+    @apply font-display text-parchment-200 text-lg font-semibold mb-3 tracking-wide;
+  }
+
+  .stat-block {
+    @apply flex flex-col items-center justify-center p-2 rounded-lg bg-ink-700/50 border border-ink-600/30 min-w-[4rem];
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-parchment-100 font-mono;
+  }
+
+  .stat-modifier {
+    @apply text-sm font-mono text-parchment-300;
+  }
+
+  .stat-label {
+    @apply text-xs uppercase tracking-widest text-parchment-400 mt-1 font-display;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150
+           border border-transparent cursor-pointer
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-arcane-600 text-white hover:bg-arcane-500 active:bg-arcane-700
+           border-arcane-500/30;
+  }
+
+  .btn-secondary {
+    @apply btn bg-ink-700 text-parchment-200 hover:bg-ink-600 active:bg-ink-800
+           border-ink-500/30;
+  }
+
+  .btn-danger {
+    @apply btn bg-blood-700 text-white hover:bg-blood-600 active:bg-blood-800
+           border-blood-500/30;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-parchment-300 hover:bg-ink-700/50 hover:text-parchment-100;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-condition {
+    @apply badge bg-ink-700/60 border border-ink-500/40;
+  }
+
+  .input-field {
+    @apply w-full bg-ink-800 border border-ink-600/50 rounded-lg px-3 py-2
+           text-parchment-100 placeholder-parchment-500
+           focus:outline-none focus:ring-1 focus:ring-arcane-500/50 focus:border-arcane-500/50
+           transition-colors;
+  }
+
+  .progress-bar {
+    @apply h-2 rounded-full bg-ink-700 overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-300;
+  }
+
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm bg-ink-900 border border-ink-600 rounded-lg
+           text-parchment-200 shadow-xl pointer-events-none;
+  }
+}
